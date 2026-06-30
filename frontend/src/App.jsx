@@ -1,0 +1,167 @@
+import React, { useState, useRef } from 'react';
+import axios from 'axios';
+import ReactMarkdown from 'react-markdown';
+import html2pdf from 'html2pdf.js';
+import { FiUploadCloud, FiCopy, FiDownload, FiCheck } from 'react-icons/fi';
+import './index.css';
+
+function App() {
+  const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [notes, setNotes] = useState('');
+  const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [isDragActive, setIsDragActive] = useState(false);
+  const fileInputRef = useRef(null);
+  const notesRef = useRef(null);
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileSelection(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFileSelection(e.target.files[0]);
+    }
+  };
+
+  const handleFileSelection = async (selectedFile) => {
+    if (selectedFile.type !== 'application/pdf') {
+      setError('Please upload a valid PDF file.');
+      return;
+    }
+    setFile(selectedFile);
+    setError('');
+    generateNotes(selectedFile);
+  };
+
+  const generateNotes = async (selectedFile) => {
+    setLoading(true);
+    setNotes('');
+    setError('');
+
+    const formData = new FormData();
+    formData.append('pdf', selectedFile);
+
+    try {
+      const response = await axios.post('http://localhost:5000/api/generate-notes', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      setNotes(response.data.notes);
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.error || 'Failed to generate notes. Please make sure the backend is running.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(notes);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const downloadPDF = () => {
+    const element = notesRef.current;
+    const opt = {
+      margin:       0.5,
+      filename:     'Study_Notes.pdf',
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2 },
+      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
+      pagebreak:    { mode: ['css', 'legacy'] }
+    };
+    html2pdf().set(opt).from(element).save();
+  };
+
+  return (
+    <div className="app-container">
+      <header className="header">
+        <h1>NoteGenie</h1>
+        <p>Transform your college PDFs into beautifully structured study notes in seconds.</p>
+      </header>
+
+      <main className="main-content">
+        {!notes && !loading && (
+          <div 
+            className={`upload-zone ${isDragActive ? 'drag-active' : ''}`}
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current.click()}
+          >
+            <input 
+              type="file" 
+              accept=".pdf" 
+              style={{ display: 'none' }} 
+              ref={fileInputRef}
+              onChange={handleFileChange}
+            />
+            <FiUploadCloud className="upload-icon" />
+            <h2 className="upload-text">Click or drag & drop your PDF here</h2>
+            <p className="upload-subtext">Maximum file size: 10MB</p>
+          </div>
+        )}
+
+        {error && <div className="error-message">{error}</div>}
+
+        {loading && (
+          <div className="loading-container">
+            <span className="loader"></span>
+            <div className="loading-text">Analyzing your document and crafting notes...</div>
+          </div>
+        )}
+
+        {notes && !loading && (
+          <div className="notes-container">
+            <div className="notes-actions">
+              <button className="action-btn" onClick={copyToClipboard}>
+                {copied ? <FiCheck /> : <FiCopy />}
+                {copied ? 'Copied!' : 'Copy Notes'}
+              </button>
+              <button className="action-btn" onClick={downloadPDF}>
+                <FiDownload />
+                Download PDF
+              </button>
+              <button className="action-btn" onClick={() => { setNotes(''); setFile(null); }}>
+                <FiUploadCloud />
+                Upload Another
+              </button>
+            </div>
+            <div className="notes-content" ref={notesRef}>
+              <ReactMarkdown>{notes}</ReactMarkdown>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
+export default App;
