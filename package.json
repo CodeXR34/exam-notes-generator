@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "nodemon server/index.js",
+    "server": "nodemon --watch server --watch .env server/index.js",
     "client": "vite",
     "build": "vite build",
     "preview": "vite preview"
@@ -14,7 +14,7 @@
     "axios": "^1.18.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
-    "express": "^5.2.1",
+    "express": "^4.21.0",
     "html2pdf.js": "^0.14.0",
     "multer": "^2.2.0",
     "pdf-parse": "^2.4.5",
