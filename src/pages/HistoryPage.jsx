@@ -69,7 +69,7 @@ const HistoryPage = ({ onBack }) => {
   return (
     <div className="history-page">
       <div className="history-header-actions">
-        <h2>Your Notes History</h2>
+        <h2>Your Notes History </h2>
         <button className="btn-primary generate-new-btn" onClick={onBack}>
           Generate New +
         </button>
