@@ -5,10 +5,14 @@ import html2pdf from 'html2pdf.js';
 import { FiUploadCloud, FiCopy, FiDownload, FiCheck } from 'react-icons/fi';
 import { useAuth } from './hooks/useAuth';
 import LandingPage from './pages/LandingPage';
+import HistoryPage from './pages/HistoryPage';
+import { db } from './firebase/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import './index.css';
 
 function App() {
   const { currentUser, loginWithGoogle, loginWithPhone, logout } = useAuth();
+  const [showHistory, setShowHistory] = useState(false);
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [notes, setNotes] = useState('');
@@ -75,6 +79,17 @@ function App() {
         }
       });
       setNotes(response.data.notes);
+
+      try {
+        await addDoc(collection(db, 'notes'), {
+          uid: currentUser.uid,
+          fileName: selectedFile.name,
+          notes: response.data.notes,
+          createdAt: serverTimestamp()
+        });
+      } catch (firestoreErr) {
+        console.error('Error saving to Firestore:', firestoreErr);
+      }
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.error || 'Failed to generate notes. Please make sure the backend is running.');
@@ -125,6 +140,7 @@ function App() {
                 />
               )}
               <span style={{ fontSize: '0.9rem', color: '#666' }}>{currentUser.displayName || currentUser.email}</span>
+              <button onClick={() => setShowHistory(true)} className="action-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>History</button>
               <button onClick={logout} className="action-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Logout</button>
             </div>
           )}
@@ -133,6 +149,9 @@ function App() {
         <p>Transform your college PDFs into beautifully structured study notes in seconds.</p>
       </header>
 
+      {showHistory ? (
+        <HistoryPage onBack={() => setShowHistory(false)} />
+      ) : (
       <main className="main-content">
         {!notes && !loading && (
           <div 
@@ -187,6 +206,7 @@ function App() {
           </div>
         )}
       </main>
+      )}
     </div>
   );
 }
