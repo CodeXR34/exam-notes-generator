@@ -4,10 +4,11 @@ import ReactMarkdown from 'react-markdown';
 import html2pdf from 'html2pdf.js';
 import { FiUploadCloud, FiCopy, FiDownload, FiCheck } from 'react-icons/fi';
 import { useAuth } from './hooks/useAuth';
+import LandingPage from './pages/LandingPage';
 import './index.css';
 
 function App() {
-  const { currentUser, loginWithGoogle, logout } = useAuth();
+  const { currentUser, loginWithGoogle, loginWithPhone, logout } = useAuth();
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [notes, setNotes] = useState('');
@@ -101,20 +102,34 @@ function App() {
     html2pdf().set(opt).from(element).save();
   };
 
+  if (!currentUser) {
+    return (
+      <LandingPage 
+        loginWithGoogle={loginWithGoogle} 
+        loginWithPhone={loginWithPhone || (() => alert('Phone login coming soon'))} 
+      />
+    );
+  }
+
   return (
     <div className="app-container">
       <header className="header" style={{ position: 'relative' }}>
         <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
-          {currentUser ? (
+          {currentUser && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <span style={{ fontSize: '0.9rem', color: '#666' }}>{currentUser.email || currentUser.displayName}</span>
+              {currentUser.photoURL && (
+                <img 
+                  src={currentUser.photoURL} 
+                  alt="Profile" 
+                  style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} 
+                />
+              )}
+              <span style={{ fontSize: '0.9rem', color: '#666' }}>{currentUser.displayName || currentUser.email}</span>
               <button onClick={logout} className="action-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Logout</button>
             </div>
-          ) : (
-            <button onClick={loginWithGoogle} className="action-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Sign In</button>
           )}
         </div>
-        <h1>NoteGenie</h1>
+        <h1>NoteGem</h1>
         <p>Transform your college PDFs into beautifully structured study notes in seconds.</p>
       </header>
 
