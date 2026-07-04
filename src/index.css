@@ -262,46 +262,46 @@ body {
   .app-container {
     padding: 1rem;
   }
-  
+
   .header {
     margin-bottom: 2rem;
   }
-  
+
   .header h1 {
     font-size: 2rem;
   }
-  
+
   .header p {
     font-size: 1rem;
   }
-  
+
   .upload-zone {
     padding: 2.5rem 1.5rem;
   }
-  
+
   .upload-icon {
     font-size: 2.5rem;
   }
-  
+
   .upload-text {
     font-size: 1.1rem;
   }
-  
+
   .notes-container {
     padding: 1.5rem;
   }
-  
+
   .notes-actions {
     flex-direction: column;
     align-items: stretch;
     gap: 0.5rem;
   }
-  
+
   .action-btn {
     justify-content: center;
     padding: 0.75rem 1rem;
   }
-  
+
   .notes-content {
     font-size: 0.95rem;
   }
@@ -311,8 +311,16 @@ body {
   .header h1 {
     font-size: 1.75rem;
   }
-  
-  .notes-content h1 { font-size: 1.5rem; }
-  .notes-content h2 { font-size: 1.25rem; }
-  .notes-content h3 { font-size: 1.1rem; }
+
+  .notes-content h1 {
+    font-size: 1.5rem;
+  }
+
+  .notes-content h2 {
+    font-size: 1.25rem;
+  }
+
+  .notes-content h3 {
+    font-size: 1.1rem;
+  }
 }

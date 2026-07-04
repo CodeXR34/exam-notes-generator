@@ -107,21 +107,21 @@ function App() {
   const downloadPDF = () => {
     const element = notesRef.current;
     const opt = {
-      margin:       0.5,
-      filename:     'Study_Notes.pdf',
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2 },
-      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
-      pagebreak:    { mode: ['css', 'legacy'] }
+      margin: 0.5,
+      filename: 'Study_Notes.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'] }
     };
     html2pdf().set(opt).from(element).save();
   };
 
   if (!currentUser) {
     return (
-      <LandingPage 
-        loginWithGoogle={loginWithGoogle} 
-        loginWithPhone={loginWithPhone || (() => alert('Phone login coming soon'))} 
+      <LandingPage
+        loginWithGoogle={loginWithGoogle}
+        loginWithPhone={loginWithPhone || (() => alert('Phone login coming soon'))}
       />
     );
   }
@@ -133,10 +133,10 @@ function App() {
           {currentUser && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               {currentUser.photoURL && (
-                <img 
-                  src={currentUser.photoURL} 
-                  alt="Profile" 
-                  style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} 
+                <img
+                  src={currentUser.photoURL}
+                  alt="Profile"
+                  style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
                 />
               )}
               <span style={{ fontSize: '0.9rem', color: '#666' }}>{currentUser.displayName || currentUser.email}</span>
@@ -152,60 +152,60 @@ function App() {
       {showHistory ? (
         <HistoryPage onBack={() => setShowHistory(false)} />
       ) : (
-      <main className="main-content">
-        {!notes && !loading && (
-          <div 
-            className={`upload-zone ${isDragActive ? 'drag-active' : ''}`}
-            onDragEnter={handleDragEnter}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current.click()}
-          >
-            <input 
-              type="file" 
-              accept=".pdf" 
-              style={{ display: 'none' }} 
-              ref={fileInputRef}
-              onChange={handleFileChange}
-            />
-            <FiUploadCloud className="upload-icon" />
-            <h2 className="upload-text">Click or drag & drop your PDF here</h2>
-            <p className="upload-subtext">Maximum file size: 10MB</p>
-          </div>
-        )}
-
-        {error && <div className="error-message">{error}</div>}
-
-        {loading && (
-          <div className="loading-container">
-            <span className="loader"></span>
-            <div className="loading-text">Analyzing your document and crafting notes...</div>
-          </div>
-        )}
-
-        {notes && !loading && (
-          <div className="notes-container">
-            <div className="notes-actions">
-              <button className="action-btn" onClick={copyToClipboard}>
-                {copied ? <FiCheck /> : <FiCopy />}
-                {copied ? 'Copied!' : 'Copy Notes'}
-              </button>
-              <button className="action-btn" onClick={downloadPDF}>
-                <FiDownload />
-                Download PDF
-              </button>
-              <button className="action-btn" onClick={() => { setNotes(''); setFile(null); }}>
-                <FiUploadCloud />
-                Upload Another
-              </button>
+        <main className="main-content">
+          {!notes && !loading && (
+            <div
+              className={`upload-zone ${isDragActive ? 'drag-active' : ''}`}
+              onDragEnter={handleDragEnter}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current.click()}
+            >
+              <input
+                type="file"
+                accept=".pdf"
+                style={{ display: 'none' }}
+                ref={fileInputRef}
+                onChange={handleFileChange}
+              />
+              <FiUploadCloud className="upload-icon" />
+              <h2 className="upload-text">Click or drag & drop your PDF here</h2>
+              <p className="upload-subtext">Maximum file size: 10MB</p>
             </div>
-            <div className="notes-content" ref={notesRef}>
-              <ReactMarkdown>{notes}</ReactMarkdown>
+          )}
+
+          {error && <div className="error-message">{error}</div>}
+
+          {loading && (
+            <div className="loading-container">
+              <span className="loader"></span>
+              <div className="loading-text">Analyzing your document and crafting notes...</div>
             </div>
-          </div>
-        )}
-      </main>
+          )}
+
+          {notes && !loading && (
+            <div className="notes-container">
+              <div className="notes-actions">
+                <button className="action-btn" onClick={copyToClipboard}>
+                  {copied ? <FiCheck /> : <FiCopy />}
+                  {copied ? 'Copied!' : 'Copy Notes'}
+                </button>
+                <button className="action-btn" onClick={downloadPDF}>
+                  <FiDownload />
+                  Download PDF
+                </button>
+                <button className="action-btn" onClick={() => { setNotes(''); setFile(null); }}>
+                  <FiUploadCloud />
+                  Upload Another
+                </button>
+              </div>
+              <div className="notes-content" ref={notesRef}>
+                <ReactMarkdown>{notes}</ReactMarkdown>
+              </div>
+            </div>
+          )}
+        </main>
       )}
     </div>
   );
