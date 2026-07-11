@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "nodemon --watch server --watch .env server/index.js",
+    "dev": "concurrently \"npm run dev:servers\" \"npm run client\"",
+    "server": "node server/index.js",
+    "questions-server": "node server/questionsServer.js",
+    "dev:servers": "concurrently \"npm run server\" \"npm run questions-server\"",
     "client": "vite",
     "build": "vite build",
     "preview": "vite preview"

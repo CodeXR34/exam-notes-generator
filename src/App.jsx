@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import html2pdf from 'html2pdf.js';
-import { FiUploadCloud, FiCopy, FiDownload, FiCheck } from 'react-icons/fi';
+import { FiUploadCloud, FiCopy, FiDownload, FiCheck, FiHelpCircle } from 'react-icons/fi';
 import { useAuth } from './hooks/useAuth';
 import LandingPage from './pages/LandingPage';
 import HistoryPage from './pages/HistoryPage';
@@ -21,6 +21,11 @@ function App() {
   const [isDragActive, setIsDragActive] = useState(false);
   const fileInputRef = useRef(null);
   const notesRef = useRef(null);
+
+  const [questions, setQuestions] = useState('');
+  const [loadingQuestions, setLoadingQuestions] = useState(false);
+  const [showQuestions, setShowQuestions] = useState(false);
+  const questionsRef = useRef(null);
 
   const handleDragEnter = (e) => {
     e.preventDefault();
@@ -95,6 +100,25 @@ function App() {
       setError(err.response?.data?.error || 'Failed to generate notes. Please make sure the backend is running.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const generateQuestions = async () => {
+    if (!file) return;
+    setLoadingQuestions(true);
+    setQuestions('');
+    setShowQuestions(true);
+    const formData = new FormData();
+    formData.append('pdf', file);
+    try {
+      const response = await axios.post('/api/generate-questions', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setQuestions(response.data.questions);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingQuestions(false);
     }
   };
 
@@ -195,6 +219,10 @@ function App() {
                   <FiDownload />
                   Download PDF
                 </button>
+                <button className="action-btn" onClick={generateQuestions}>
+                  <FiHelpCircle />
+                  Questions
+                </button>
                 <button className="action-btn" onClick={() => { setNotes(''); setFile(null); }}>
                   <FiUploadCloud />
                   Upload Another
@@ -203,6 +231,31 @@ function App() {
               <div className="notes-content" ref={notesRef}>
                 <ReactMarkdown>{notes}</ReactMarkdown>
               </div>
+            </div>
+          )}
+
+          {showQuestions && (
+            <div className="notes-container" style={{ marginTop: '2rem' }}>
+              <div className="notes-actions">
+                <button className="action-btn" onClick={() => setShowQuestions(false)}>
+                  ✕ Close Questions
+                </button>
+                {questions && (
+                  <button className="action-btn" onClick={() => navigator.clipboard.writeText(questions)}>
+                    <FiCopy /> Copy Questions
+                  </button>
+                )}
+              </div>
+              {loadingQuestions ? (
+                <div className="loading-container">
+                  <span className="loader"></span>
+                  <div className="loading-text">Generating practice questions...</div>
+                </div>
+              ) : (
+                <div className="notes-content" ref={questionsRef}>
+                  <ReactMarkdown>{questions}</ReactMarkdown>
+                </div>
+              )}
             </div>
           )}
         </main>
