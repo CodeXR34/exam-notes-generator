@@ -6,6 +6,7 @@ import { FiUploadCloud, FiCopy, FiDownload, FiCheck, FiHelpCircle } from 'react-
 import { useAuth } from './hooks/useAuth';
 import LandingPage from './pages/LandingPage';
 import HistoryPage from './pages/HistoryPage';
+import QuestionsPage from './pages/QuestionsPage';
 import { db } from './firebase/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import './index.css';
@@ -13,6 +14,7 @@ import './index.css';
 function App() {
   const { currentUser, loginWithGoogle, loginWithPhone, logout } = useAuth();
   const [showHistory, setShowHistory] = useState(false);
+  const [showQuestionsPage, setShowQuestionsPage] = useState(false);
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [notes, setNotes] = useState('');
@@ -21,11 +23,6 @@ function App() {
   const [isDragActive, setIsDragActive] = useState(false);
   const fileInputRef = useRef(null);
   const notesRef = useRef(null);
-
-  const [questions, setQuestions] = useState('');
-  const [loadingQuestions, setLoadingQuestions] = useState(false);
-  const [showQuestions, setShowQuestions] = useState(false);
-  const questionsRef = useRef(null);
 
   const handleDragEnter = (e) => {
     e.preventDefault();
@@ -70,12 +67,14 @@ function App() {
   };
 
   const generateNotes = async (selectedFile) => {
+    if (loading) return; // Prevent duplicate API calls
     setLoading(true);
     setNotes('');
     setError('');
 
     const formData = new FormData();
     formData.append('pdf', selectedFile);
+    formData.append('uid', currentUser.uid);
 
     try {
       const response = await axios.post('/api/generate-notes', formData, {
@@ -84,41 +83,15 @@ function App() {
         }
       });
       setNotes(response.data.notes);
-
-      try {
-        await addDoc(collection(db, 'notes'), {
-          uid: currentUser.uid,
-          fileName: selectedFile.name,
-          notes: response.data.notes,
-          createdAt: serverTimestamp()
-        });
-      } catch (firestoreErr) {
-        console.error('Error saving to Firestore:', firestoreErr);
-      }
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.error || 'Failed to generate notes. Please make sure the backend is running.');
+      if (err.response?.status === 429) {
+        setError('Daily free-tier limit reached (20 requests/day). Try again tomorrow or use a different API key.');
+      } else {
+        setError(err.response?.data?.error || 'Failed to generate notes. Please make sure the backend is running.');
+      }
     } finally {
       setLoading(false);
-    }
-  };
-
-  const generateQuestions = async () => {
-    if (!file) return;
-    setLoadingQuestions(true);
-    setQuestions('');
-    setShowQuestions(true);
-    const formData = new FormData();
-    formData.append('pdf', file);
-    try {
-      const response = await axios.post('/api/generate-questions', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      setQuestions(response.data.questions);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingQuestions(false);
     }
   };
 
@@ -164,7 +137,7 @@ function App() {
                 />
               )}
               <span style={{ fontSize: '0.9rem', color: '#666' }}>{currentUser.displayName || currentUser.email}</span>
-              <button onClick={() => setShowHistory(true)} className="action-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>History</button>
+              <button onClick={() => { setShowHistory(true); setShowQuestionsPage(false); }} className="action-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>History</button>
               <button onClick={logout} className="action-btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Logout</button>
             </div>
           )}
@@ -175,6 +148,8 @@ function App() {
 
       {showHistory ? (
         <HistoryPage onBack={() => setShowHistory(false)} />
+      ) : showQuestionsPage ? (
+        <QuestionsPage file={file} onBack={() => setShowQuestionsPage(false)} />
       ) : (
         <main className="main-content">
           {!notes && !loading && (
@@ -219,7 +194,7 @@ function App() {
                   <FiDownload />
                   Download PDF
                 </button>
-                <button className="action-btn" onClick={generateQuestions}>
+                <button className="action-btn" onClick={() => setShowQuestionsPage(true)}>
                   <FiHelpCircle />
                   Questions
                 </button>
@@ -231,31 +206,6 @@ function App() {
               <div className="notes-content" ref={notesRef}>
                 <ReactMarkdown>{notes}</ReactMarkdown>
               </div>
-            </div>
-          )}
-
-          {showQuestions && (
-            <div className="notes-container" style={{ marginTop: '2rem' }}>
-              <div className="notes-actions">
-                <button className="action-btn" onClick={() => setShowQuestions(false)}>
-                  ✕ Close Questions
-                </button>
-                {questions && (
-                  <button className="action-btn" onClick={() => navigator.clipboard.writeText(questions)}>
-                    <FiCopy /> Copy Questions
-                  </button>
-                )}
-              </div>
-              {loadingQuestions ? (
-                <div className="loading-container">
-                  <span className="loader"></span>
-                  <div className="loading-text">Generating practice questions...</div>
-                </div>
-              ) : (
-                <div className="notes-content" ref={questionsRef}>
-                  <ReactMarkdown>{questions}</ReactMarkdown>
-                </div>
-              )}
             </div>
           )}
         </main>

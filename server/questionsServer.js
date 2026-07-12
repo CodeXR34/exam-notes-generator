@@ -16,13 +16,23 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 }
 });
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY_QUESTIONS);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY_QUESTIONS || process.env.GEMINI_API_KEY);
 
 app.post('/api/generate-questions', upload.single('pdf'), async (req, res) => {
   try {
+    console.log(`[${new Date().toISOString()}] POST /api/generate-questions - Request received.`);
+
     if (!req.file) {
+      console.warn("Request rejected: No PDF file uploaded.");
       return res.status(400).json({ error: 'No PDF file uploaded.' });
     }
+
+    if (req.file.mimetype !== 'application/pdf') {
+      console.warn(`Request rejected: Invalid file type ${req.file.mimetype}`);
+      return res.status(400).json({ error: 'Invalid file format. Please upload a PDF.' });
+    }
+
+    console.log(`File received: ${req.file.originalname} (${req.file.size} bytes)`);
 
     const pdfPart = {
       inlineData: {
@@ -31,6 +41,7 @@ app.post('/api/generate-questions', upload.single('pdf'), async (req, res) => {
       }
     };
 
+    console.log("Initializing Gemini model 'gemini-2.5-flash'...");
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const prompt = `
@@ -58,13 +69,24 @@ Generate the following:
 Do NOT provide answers. Output only the questions in clean Markdown format.
     `;
 
+    console.log("Sending request to Gemini API...");
     const result = await model.generateContent([prompt, pdfPart]);
+    console.log("Received successful response from Gemini API.");
+    
     const questions = result.response.text();
 
     res.json({ questions });
 
   } catch (error) {
-    console.error('Error generating questions:', error);
+    console.error(`[${new Date().toISOString()}] Error generating questions:`);
+    console.error(error);
+    console.error(error.stack);
+    console.error(JSON.stringify(error, null, 2));
+
+    if (error.message && error.message.includes('429 Too Many Requests')) {
+      return res.status(429).json({ error: 'API quota exceeded. Please try again later or use a different API key.' });
+    }
+
     res.status(500).json({ error: `An error occurred: ${error.message}` });
   }
 });
