@@ -3,14 +3,17 @@ import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import { FiCopy, FiArrowLeft } from 'react-icons/fi';
 
-const QuestionsPage = ({ file, onBack }) => {
-  const [questions, setQuestions] = useState('');
+const QuestionsPage = ({ file, onBack, questions, setQuestions, questionsFileRef }) => {
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [questionsError, setQuestionsError] = useState('');
   const questionsRef = useRef(null);
 
   useEffect(() => {
     if (file) {
+      if (questions && questionsFileRef.current === file) {
+        // Skip API call, we already have cached questions for this file
+        return;
+      }
       generateQuestions();
     }
   }, [file]);
@@ -31,6 +34,7 @@ const QuestionsPage = ({ file, onBack }) => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setQuestions(response.data.questions);
+      questionsFileRef.current = file;
     } catch (err) {
       console.error(err);
       if (err.response?.status === 429) {

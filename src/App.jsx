@@ -24,6 +24,9 @@ function App() {
   const fileInputRef = useRef(null);
   const notesRef = useRef(null);
 
+  const [questions, setQuestions] = useState('');
+  const questionsFileRef = useRef(null);
+
   const handleDragEnter = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -149,7 +152,13 @@ function App() {
       {showHistory ? (
         <HistoryPage onBack={() => setShowHistory(false)} />
       ) : showQuestionsPage ? (
-        <QuestionsPage file={file} onBack={() => setShowQuestionsPage(false)} />
+        <QuestionsPage 
+          file={file} 
+          onBack={() => setShowQuestionsPage(false)} 
+          questions={questions}
+          setQuestions={setQuestions}
+          questionsFileRef={questionsFileRef}
+        />
       ) : (
         <main className="main-content">
           {!notes && !loading && (
@@ -198,7 +207,12 @@ function App() {
                   <FiHelpCircle />
                   Questions
                 </button>
-                <button className="action-btn" onClick={() => { setNotes(''); setFile(null); }}>
+                <button className="action-btn" onClick={() => { 
+                  setNotes(''); 
+                  setFile(null); 
+                  setQuestions('');
+                  questionsFileRef.current = null;
+                }}>
                   <FiUploadCloud />
                   Upload Another
                 </button>
