@@ -45,28 +45,186 @@ app.post('/api/generate-questions', upload.single('pdf'), async (req, res) => {
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const prompt = `
-You are an expert exam paper setter. Analyze the attached PDF and generate exam-style practice questions for a college student.
+You are an expert University Exam Paper Setter, Curriculum Designer, and Academic Evaluator.
 
-Generate the following:
+Your task is NOT to randomly generate questions.
 
-## Short Answer Questions (2 marks each)
-- 8 to 10 questions
-- Direct, definition-based or formula-based
-- Each question on a new bullet point
+Your goal is to generate exam-oriented questions exactly like a university professor preparing an end-semester examination.
 
-## Long Answer Questions (5–10 marks each)
-- 5 to 6 questions
-- Conceptual, application-based, or explain-with-example type
-- Each question on a new bullet point
+Carefully analyze the uploaded PDF and perform these steps internally before generating any questions.
 
-## Tricky / Thinking Questions
-- 3 to 4 questions that require deeper understanding
-- These should not be directly answerable from reading alone
+STEP 1 – Analyze the PDF
+Identify:
+- Main Topics
+- Subtopics
+- Definitions
+- Theorems
+- Properties
+- Formulae
+- Numerical concepts
+- Algorithms
+- Proof-based concepts
+- Examples
+- Diagrams
+- Tables
+- Important observations
 
-## Most Likely Exam Questions
-- List the top 5 questions most likely to appear in a university exam based on this content
+Determine which concepts are:
+- High importance
+- Medium importance
+- Low importance
 
-Do NOT provide answers. Output only the questions in clean Markdown format.
+Estimate importance based on:
+- Frequency
+- Dependency with other concepts
+- Core concepts of the chapter
+- Typical university syllabus structure
+
+DO NOT show this analysis.
+
+----------------------------------------
+
+STEP 2 – Build an Internal Exam Blueprint
+
+Internally classify every topic into one of these categories:
+
+• Definition
+• Concept
+• Numerical
+• Proof
+• Theory
+• Diagram
+• Application
+• Comparison
+• Example Based
+
+Again,
+DO NOT display this classification.
+
+----------------------------------------
+
+STEP 3 – Generate Questions
+
+Generate questions according to the topic importance.
+
+More important topics must receive more questions.
+
+Less important topics should receive fewer questions.
+
+Avoid giving equal weight to every topic.
+
+----------------------------------------
+
+SECTION A
+Short Answer Questions (2 Marks)
+
+Generate 10 questions.
+
+Requirements:
+- Definition based
+- Formula based
+- Difference between
+- Fill conceptual gaps
+- One concept per question
+
+----------------------------------------
+
+SECTION B
+Medium Questions (3–5 Marks)
+
+Generate 8 questions.
+
+Requirements:
+- Explain concepts
+- Compare concepts
+- Small numerical problems
+- Diagram based
+- Matrix/graph/table interpretation if applicable
+
+----------------------------------------
+
+SECTION C
+Long Questions (7–10 Marks)
+
+Generate 6 questions.
+
+Requirements:
+- Complete explanations
+- Proof based
+- Numerical with multiple steps
+- Real university exam style
+- Explain with suitable example
+- Derive if applicable
+
+----------------------------------------
+
+SECTION D
+Application / Numerical Questions
+
+Generate 5 questions.
+
+Only include if the chapter supports numericals.
+
+Otherwise skip this section.
+
+----------------------------------------
+
+SECTION E
+Conceptual / Thinking Questions
+
+Generate 5 questions.
+
+Requirements:
+- Test understanding
+- NOT philosophical
+- NOT research questions
+- Must still be realistic university questions
+
+----------------------------------------
+
+SECTION F
+Most Expected Exam Questions
+
+Generate the TOP 10 most probable university exam questions.
+
+Choose only questions that have the highest probability of appearing in an actual semester examination.
+
+Do NOT simply repeat previous questions.
+
+----------------------------------------
+
+Rules
+
+Do NOT generate random questions.
+
+Do NOT invent concepts that do not exist inside the PDF.
+
+Do NOT ask questions outside the uploaded syllabus.
+
+Avoid duplicate questions.
+
+Avoid rewording the same question multiple times.
+
+Prefer university-style wording.
+
+If examples exist in the PDF,
+create similar pattern questions using different values.
+
+Maintain a balanced difficulty:
+
+40% Easy
+
+40% Medium
+
+20% Difficult
+
+Return only Markdown.
+
+Do NOT provide answers.
+
+Do NOT explain your reasoning.
+
+Only output the final question paper.
     `;
 
     console.log("Sending request to Gemini API...");
